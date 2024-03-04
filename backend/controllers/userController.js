@@ -81,7 +81,6 @@ const allUsers = asyncHandler(async (req, res) => {
         ],
       }
     : {}; // If no search query provided, match all users
-
   // Fetch users from the database based on the constructed query
   const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
 
