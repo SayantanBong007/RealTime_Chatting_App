@@ -11,6 +11,7 @@ import {
 import React, { useState } from "react";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
+import { useGoogleLogin } from "@react-oauth/google";
 
 function Login() {
   // State variables to hold form input values
@@ -23,6 +24,51 @@ function Login() {
   const history = useHistory();
   // Function to toggle password visibility
   const handleClick = () => setShow(!show);
+
+  /********************************************************************************************* */
+  //Handle Gooogle Sign in
+  const handleGoogleSignin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        console.log("Token Response:", tokenResponse);
+        // Fetch user data from Google OAuth
+        const res = await axios.get(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        );
+        const config = {
+          headers: {
+            "Content-type": "application/json", // Set content type to JSON
+          },
+          withCredentials: true,
+        };
+
+        // Send the Google access token to the backend for further processing
+        const data = await axios.post("http://localhost:5000/api/user/login", {
+          googleAccessToken: tokenResponse.access_token,
+          name: res.data.name,
+          email: res.data.email,
+          pic: res.data.picture,
+        });
+
+        // Store user information in local storage
+        localStorage.setItem("userInfo", JSON.stringify(data.data));
+
+        // Redirect the user to the "/chats" page
+        history.push("/chats");
+
+        // Handle successful registration response
+        // console.log("User login successfully:", data.data);
+      } catch (error) {
+        // Handle errors
+        console.error("Failed to register user:", error.message);
+      }
+    },
+  });
 
   /********************************************************************************************* */
   // Function to handle form submission
@@ -134,8 +180,21 @@ function Login() {
         width="100%"
         style={{ marginTop: 15 }}
         onClick={submitHandler}
+        // isLoading={loading}
       >
         Login
+      </Button>
+
+      <span>Or</span>
+
+      <Button
+        backgroundColor="#797389"
+        width="100%"
+        style={{ marginTop: 3 }}
+        onClick={handleGoogleSignin}
+      >
+        <i class="fab fa-google" style={{ marginRight: 5 }}></i> Login With
+        Google
       </Button>
 
       <Button

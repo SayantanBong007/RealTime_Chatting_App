@@ -1,14 +1,14 @@
 {
   "files": {
-    "main.css": "/static/css/main.de8cfd52.css",
-    "main.js": "/static/js/main.5bf182c2.js",
+    "main.css": "/static/css/main.e34f5512.css",
+    "main.js": "/static/js/main.744bb00c.js",
     "static/media/demon-slayer-nezuko-and-tanjiro-edu9krggeakf45er.jpg": "/static/media/demon-slayer-nezuko-and-tanjiro-edu9krggeakf45er.21301b4b297a6735c816.jpg",
     "index.html": "/index.html",
-    "main.de8cfd52.css.map": "/static/css/main.de8cfd52.css.map",
-    "main.5bf182c2.js.map": "/static/js/main.5bf182c2.js.map"
+    "main.e34f5512.css.map": "/static/css/main.e34f5512.css.map",
+    "main.744bb00c.js.map": "/static/js/main.744bb00c.js.map"
   },
   "entrypoints": [
-    "static/css/main.de8cfd52.css",
-    "static/js/main.5bf182c2.js"
+    "static/css/main.e34f5512.css",
+    "static/js/main.744bb00c.js"
   ]
 }

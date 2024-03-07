@@ -4,3 +4,9 @@
   overflow-y: scroll;
   scrollbar-width: none;
 }
+
+span {
+  color: #797389;
+  font-weight: bold;
+  font-size: 16px;
+}

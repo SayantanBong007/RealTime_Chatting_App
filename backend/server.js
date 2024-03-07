@@ -14,7 +14,12 @@ const app = express();
 dotenv.config();
 connectDB();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(express.json()); //to accpet json data
 
 // app.get("/", (req, res) => {

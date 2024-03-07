@@ -13,7 +13,7 @@ const userSchema = mongoose.Schema(
     email: { type: String, required: true, unique: true },
 
     // Field to store the password of the user
-    password: { type: String, required: true },
+    password: { type: String },
 
     // Field to store the profile picture URL of the user
     pic: {
@@ -30,6 +30,10 @@ const userSchema = mongoose.Schema(
 
 // Define a method to compare entered password with hashed password
 userSchema.methods.matchPassword = async function (enteredPassword) {
+  if (!this.password) {
+    // If there is no password (e.g., Google login), return true
+    return true;
+  }
   // Use bcrypt.compare to compare entered password with hashed password
   return await bcrypt.compare(enteredPassword, this.password);
 };
@@ -37,16 +41,18 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 // Define a pre-save hook for the user schema
 userSchema.pre("save", async function (next) {
   // Check if the document has been modified
-  if (!this.isModified) {
+  if (!this.isModified("password")) {
     // If the document hasn't been modified, proceed with the save operation
     next();
   }
 
-  // Generate a salt for password hashing
-  const salt = await bcrypt.genSalt(10);
+  if (this.password) {
+    // Generate a salt for password hashing
+    const salt = await bcrypt.genSalt(10);
 
-  // Hash the password using the generated salt
-  this.password = await bcrypt.hash(this.password, salt);
+    // Hash the password using the generated salt
+    this.password = await bcrypt.hash(this.password, salt);
+  }
 
   // Call next() to continue with the save operation
   next();

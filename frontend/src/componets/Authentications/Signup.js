@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import { useToast } from "@chakra-ui/react";
 import axios from "axios";
 import { useHistory } from "react-router-dom";
+import { useGoogleLogin, TokenResponse } from "@react-oauth/google";
 
 function Signup() {
   // State variables to hold form input values
@@ -95,6 +96,58 @@ function Signup() {
     }
   };
 
+  /**************************************************************************************** */
+  // Handle Gooogle Signup
+
+  const handleGoogleSignUp = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        console.log("Token Response:", tokenResponse);
+        // Fetch user data from Google OAuth
+        const res = await axios.get(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        );
+        console.log(res.data);
+
+        const config = {
+          headers: {
+            "Content-type": "application/json", // Set content type to JSON
+          },
+          withCredentials: true,
+        };
+
+        // Send the Google access token to the backend for further processing
+        const data = await axios.post(
+          "http://localhost:5000/api/user",
+          {
+            googleAccessToken: tokenResponse.access_token,
+            name: res.data.name,
+            email: res.data.email,
+            pic: res.data.picture,
+          },
+          config
+        );
+        console.log(data);
+
+        // Store user information in local storage
+        localStorage.setItem("userInfo", JSON.stringify(data.data));
+
+        // Redirect the user to the "/chats" page
+        history.push("/chats");
+
+        // Handle successful registration response
+        // console.log("User registered successfully:", registerResponse.data);
+      } catch (error) {
+        // Handle errors
+        console.error("Failed to register user:", error.message);
+      }
+    },
+  });
   /**************************************************************************************** */
   // Function to handle form submission
   const submitHandler = async () => {
@@ -255,6 +308,18 @@ function Signup() {
         isLoading={loading}
       >
         Sign Up
+      </Button>
+
+      <span>Or</span>
+
+      <Button
+        backgroundColor="#797389"
+        width="100%"
+        style={{ marginTop: 3 }}
+        onClick={handleGoogleSignUp}
+      >
+        <i class="fab fa-google" style={{ marginRight: 5 }}></i> Sign Up With
+        Google
       </Button>
     </VStack>
   );

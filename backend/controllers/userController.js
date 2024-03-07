@@ -11,61 +11,104 @@ const generateToken = require("../config/generateToken");
 /************************************************************************************************************ */
 // Define a route handler for user registration
 const registerUser = asyncHandler(async (req, res) => {
-  // Extract user data from the request body
-  const { name, email, password, pic } = req.body;
-
-  // Check if all required fields are provided
-  if (!name || !email || !password) {
-    res.status(400); // Set response status code to 400 (Bad Request)
-    throw new Error("Please Enter all the Fields"); // Throw an error indicating missing fields
-  }
-
-  // Check if the user already exists in the database
-  const userExists = await User.findOne({ email });
-  if (userExists) {
-    res.status(400); // Set response status code to 400 (Bad Request)
-    throw new Error("User already exists"); // Throw an error indicating user already exists
-  }
-
-  // Create a new user in the database with provided data
-  const user = await User.create({ name, email, password, pic });
-
-  // If user creation is successful, send a response with user details and a JWT token for authentication
-  if (user) {
-    res.status(201).json({
+  //Google Oauth
+  if (req.body.googleAccessToken) {
+    const { name, email, pic } = req.body;
+    console.log(name, email, pic);
+    const user = await User.create({ name, email, pic });
+    console.log(user);
+    const token = generateToken({
+      _id: user._id,
+    });
+    res.status(201).cookie("token", token).json({
       _id: user._id,
       name: user.name,
       email: user.email,
       pic: user.pic,
-      token: generateToken(user._id), // Generate JWT token for user authentication
+      token,
     });
-  } else {
-    res.status(404); // Set response status code to 404 (Not Found)
-    throw new Error("Failed to create the user"); // Throw an error indicating user creation failed
+  }
+  //Normal form data
+  else {
+    // Extract user data from the request body
+    const { name, email, password, pic } = req.body;
+
+    // Check if all required fields are provided
+    if (!name || !email || !password) {
+      res.status(400); // Set response status code to 400 (Bad Request)
+      throw new Error("Please Enter all the Fields"); // Throw an error indicating missing fields
+    }
+
+    // Check if the user already exists in the database
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      res.status(400); // Set response status code to 400 (Bad Request)
+      throw new Error("User already exists"); // Throw an error indicating user already exists
+    }
+
+    // Create a new user in the database with provided data
+    const user = await User.create({ name, email, password, pic });
+
+    // If user creation is successful, send a response with user details and a JWT token for authentication
+    if (user) {
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        pic: user.pic,
+        token: generateToken(user._id), // Generate JWT token for user authentication
+      });
+    } else {
+      res.status(404); // Set response status code to 404 (Not Found)
+      throw new Error("Failed to create the user"); // Throw an error indicating user creation failed
+    }
   }
 });
 
 /*********************************************************************************************** */
 // Define a route handler for user authentication
 const authUser = asyncHandler(async (req, res) => {
-  // Extract user credentials from the request body
-  const { email, password } = req.body;
-
-  // Find the user in the database by email
-  const user = await User.findOne({ email });
-
-  // If user is found and password is correct, send a response with user details and a JWT token for authentication
-  if (user && (await user.matchPassword(password))) {
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      pic: user.pic,
-      token: generateToken(user._id), // Generate JWT token for user authentication
+  //Google signin
+  if (req.body.googleAccessToken) {
+    const { email } = req.body;
+    const userExists = await User.findOne({ email });
+    if (!userExists) {
+      res.status(400); // Set response status code to 400 (Bad Request)
+      throw new Error("User does not exists"); // Throw an error indicating user already exists
+    }
+    console.log(email);
+    const token = generateToken({
+      _id: userExists._id,
     });
-  } else {
-    res.status(401); // Set response status code to 401 (Unauthorized)
-    throw new Error("Invalid Email or Password"); // Throw an error indicating invalid email or password
+    res.status(201).cookie("token", token).json({
+      _id: userExists._id,
+      name: userExists.name,
+      email: userExists.email,
+      pic: userExists.pic,
+      token,
+    });
+  }
+  //Normal Login
+  else {
+    // Extract user credentials from the request body
+    const { email, password } = req.body;
+
+    // Find the user in the database by email
+    const user = await User.findOne({ email });
+
+    // If user is found and password is correct, send a response with user details and a JWT token for authentication
+    if (user && (await user.matchPassword(password))) {
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        pic: user.pic,
+        token: generateToken(user._id), // Generate JWT token for user authentication
+      });
+    } else {
+      res.status(401); // Set response status code to 401 (Unauthorized)
+      throw new Error("Invalid Email or Password"); // Throw an error indicating invalid email or password
+    }
   }
 });
 
